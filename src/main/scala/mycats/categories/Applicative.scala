@@ -99,4 +99,60 @@ object Applicative {
     override def pure[A](a: A): Id[A] = a
     override def ap[A, B](ff: Id[A => B])(fa: Id[A]): Id[B] = ff(fa)
   }
+
+  implicit def eitherApplicative[L: Monoid]: Applicative[Either[L, ?]] = new Applicative[Either[L, ?]] {
+    override def pure[R](r: R): Either[L, R] = Right(r)
+    override def ap[R1, R2](ff: Either[L, R1 => R2])(fa: Either[L, R1]): Either[L, R2] = (ff, fa) match {
+      case (Right(f), Right(a)) => Right(f(a))
+      case (Left(l1), Left(l2)) => Left(Monoid[L].combine(l1, l2))
+      case (Left(l1), _) => Left(l1)
+      case (_, Left(l2)) => Left(l2)
+    }
+  }
+
+  implicit def tuple2Applicative[L: Monoid]: Applicative[Tuple2[L, ?]] = new Applicative[Tuple2[L, ?]] {
+    override def pure[R](r: R): (L, R) = (Monoid[L].empty, r)
+    override def ap[R1, R2](ff: (L, R1 => R2))(fa: (L, R1)): (L, R2) = (ff, fa) match {
+      case ((lf, rf), (la, ra)) => (Monoid[L].combine(lf, la), rf(ra))
+    }
+  }
+
+  implicit def function1Applicative[P]: Applicative[Function1[P, ?]] = new Applicative[Function1[P, ?]] {
+
+    import Applicative.ops
+
+    override def pure[R](r: R): P => R = _ => r
+
+    /*
+    override def ap[R1, R2](ff: P => R1 => R2)(fa: P => R1): P => R2 = { p =>
+      println(s"----- p = $p")
+      val faResult: R1 = fa(p)
+      println(s"----- faResult = $faResult")
+      val f: R1 => R2 = ff(p)
+      println(s"----- f = $f")
+      val fResult = f(faResult)
+      println(s"----- fResult = $fResult")
+      fResult
+    }
+    */
+    override def ap[R1, R2](ff: P => R1 => R2)(fa: P => R1): P => R2 = { p =>
+      ff(p)(fa(p))
+      //map(ff)(f => f(fa(p)))(p)
+    }
+  }
+
+  object ops {
+
+    implicit class ApplicativeF[F[_]: Applicative, A](ctx: F[A]) {
+
+      private val F = Applicative[F]
+
+      def ap[B](ff: F[A => B]): F[B] = F.ap(ff)(ctx)
+      def <*>[B](ff: F[A => B]): F[B] = ap(ff)
+
+      def map[B](f: A => B): F[B] = F.map(ctx)(f)
+      def fmap[B](f: A => B): F[B] = map(f)
+      def <|>[B](f: A => B): F[B] = map(f) // <$> is not allowed
+    }
+  }
 }

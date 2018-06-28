@@ -1,6 +1,7 @@
-package mycats.transformers
+package mycats.apps
 
 import mycats.categories.Functor
+import mycats.transformers.EitherT
 
 object EitherTMain extends App {
 

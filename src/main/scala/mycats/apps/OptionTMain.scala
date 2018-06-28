@@ -1,8 +1,10 @@
-package mycats.transformers
+package mycats.apps
+
+import mycats.categories.Monad.ops._
+import mycats.categories.{Id, Monad}
+import mycats.transformers.OptionT
 
 import scala.language.higherKinds
-import mycats.categories.{Id, Monad}
-import Monad.syntax._
 
 object OptionTMain extends App {
 
@@ -59,9 +61,9 @@ object OptionTMain extends App {
   val otoi = OptionT[Option, Int](Option(Option(5))) // OptionT[Vector, Int]
   println(processIntMonads(otoi, otoi).value)
 
-  import scala.concurrent.{Await, Future}
-  import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.duration._
+  import scala.concurrent.{Await, Future}
 
   val otfi = processIntMonads(OptionT(Future(Option(5))), OptionT(Future(Option(5)))) // OptionT[Option, Int]
   Await.ready(otfi.value, 1.second)
