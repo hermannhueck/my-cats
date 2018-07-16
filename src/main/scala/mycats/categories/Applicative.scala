@@ -34,10 +34,21 @@ trait Applicative[F[_]] extends Any with Functor[F] { self =>
     // same as: ap(map3(fa, fb, fc)((a, b, c) => (d:D) => f(a, b, c, d)))(fd)
 
   def product[A, B](fa: F[A], fb: F[B]): F[(A, B)] = map2(fa, fb)((_, _))
+  // same as: ap(map(fa)(a => (b: B) => (a, b)))(fb)
+  // same as:
+  //  def product[A, B](fa: F[A], fb: F[B]): F[(A, B)] = {
+  //    val f: (A, B) => (A, B) = (a:A, b:B) => (a, b)
+  //    val ff1: F[A => B => (A, B)] = pure(f.curried)
+  //    val ff2: F[B => (A, B)] = ap(ff1)(fa)
+  //    val fab: F[(A, B)] = ap(ff2)(fb)
+  //    fab
+  //  }
 
   def tuple2[A, B](fa: F[A], fb: F[B]): F[(A, B)] = product(fa, fb)
 
   def tuple3[A, B, C](fa: F[A], fb: F[B], fc: F[C]): F[(A, B, C)] = map3(fa, fb, fc)((_, _, _))
+
+  def tuple4[A, B, C, D](fa: F[A], fb: F[B], fc: F[C], fd: F[D]): F[(A, B, C, D)] = map4(fa, fb, fc, fd)((_, _, _, _))
 
   def flip[A, B](ff: F[A => B]): F[A] => F[B] = fa => ap(ff)(fa)
 

@@ -9,6 +9,8 @@ object Monoid {
 
   def apply[A: Monoid]: Monoid[A] = implicitly[Monoid[A]]
 
+  // instances
+
   abstract class MonoidTemplate[A](zero: A, f: (A, A) => A) extends Monoid[A] {
     override def empty: A = zero
     override def combine(x: A, y: A): A = f(x, y)
