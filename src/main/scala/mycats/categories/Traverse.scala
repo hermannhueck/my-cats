@@ -9,6 +9,8 @@ trait Traverse[F[_]] extends Any with Foldable[F] with Functor[F] { self =>
   def sequence[G[_], A](fga: F[G[A]])(implicit AG: Applicative[G]): G[F[A]] =
     traverse(fga)(identity)
 
+  override def map[A, B](fa: F[A])(f: A => B): F[B] = traverse(fa)(f: A => Id[B])
+
   def compose[G[_]: Traverse]: Traverse[Lambda[X => F[G[X]]]] =
     new Traverse.Composite[F, G] {
       def F: Traverse[F] = self
